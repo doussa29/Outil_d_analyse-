@@ -48,7 +48,7 @@ TEMPLATE_HTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI4Debunk - Centre de Validation</title>
+    <title> Centre de Validation</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', system-ui, sans-serif; }
@@ -65,19 +65,19 @@ TEMPLATE_HTML = """
 
     <nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
         <div class="container">
-            <span class="navbar-brand mb-0 h1">📊 AI4Debunk - Plateforme d'Administration des Données</span>
-            <span class="text-light small">Laboratoire ISIA (UMONS) — Amadou</span>
+            <span class="navbar-brand mb-0 h1"> Plateforme d'Administration des Données</span>
+            <span class="text-light small"> Analyse de Données </span>
         </div>
     </nav>
 
     <div class="container">
         <div class="alert alert-info shadow-sm mb-4 border-0" style="background-color: #e2f0fd; color: #084298;">
-            <h5 class="alert-heading fw-bold">🚀 Bienvenue sur le Dashboard de Traitement des Annotations</h5>
+            <h5 class="alert-heading fw-bold">Bienvenue sur le Dashboard de Traitement des Annotations</h5>
             <p class="mb-2">Ce tableau de bord centralise le traitement de vos annotations manuelles. Il vous permet de :</p>
             <ul class="mb-0">
                 <li><strong>Extraire</strong> les données brutes de vos fichiers JSON.</li>
                 <li><strong>Analyser</strong> l'accord inter-annotateurs (Kappas, Pearson, Typologie).</li>
-                <li><strong>Simuler</strong> des règles de consensus pour générer vos <em>Gold Standards</em>.</li>
+                <li><strong>Simuler</strong> des règles de consensus .</li>
                 <li><strong>Créer</strong> une feuille de route pour résoudre vos litiges d'annotation.</li>
             </ul>
         </div>
@@ -128,19 +128,6 @@ TEMPLATE_HTML = """
             </form>
         </div>
 
-        {% if onglet_actif != 'brutes' %}
-        <ul class="nav nav-pills nav-fill mb-4 p-1 bg-white rounded shadow-sm">
-            <li class="nav-item">
-                <a class="nav-link {% if onglet_actif == 'analyse' %}active{% endif %}" href="#">📈 Accords Inter-Annotateurs</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if onglet_actif == 'simuler' %}active{% endif %}" href="#">🧪 Simulateur de Filtrage</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if onglet_actif == 'conflits' %}active{% endif %}" href="#">⚠️ Gestion des Conflits</a>
-            </li>
-        </ul>
-        {% endif %}
 
         <div class="tab-content" id="pills-tabContent">
             
@@ -204,11 +191,11 @@ TEMPLATE_HTML = """
                 <h5 class="text-dark fw-bold mb-3">Rapport des Scénarios Comparatifs</h5>
                 <div class="table-responsive mb-4">{{ table_simulation | safe }}</div>
                 
-                <h5 class="text-dark fw-bold mb-3 mt-4">⚖️ Proportions et Équilibre des Relations</h5>
+                <h5 class="text-dark fw-bold mb-3 mt-4"> Proportions et Équilibre des Relations</h5>
                 <div class="table-responsive mb-4">{{ table_proportions | safe }}</div>
 
                 <div class="alert shadow-sm mb-4 border-0" style="background-color: #fff3cd; color: #664d03;">
-                    <h5 class="alert-heading fw-bold">🤖 Diagnostic d'Équilibre et Recommandation Algorithmique</h5>
+                    <h5 class="alert-heading fw-bold"> Diagnostic d'Équilibre et Recommandation Algorithmique</h5>
                     <p class="mb-0" style="white-space: pre-line;">{{ diagnostic }}</p>
                 </div>
 
@@ -217,7 +204,7 @@ TEMPLATE_HTML = """
                 </div>
                 
                 <div class="alert alert-success mt-4 shadow-sm border-0">
-                    <h6 class="fw-bold text-success mb-3">💾 Fichiers de Production Prêts !</h6>
+                    <h6 class="fw-bold text-success mb-3"> Fichiers de Production Prêts !</h6>
                     <p class="small text-muted mb-3">Les datasets consolidés ont été générés avec succès. Que souhaitez-vous télécharger ?</p>
                     <div class="d-flex gap-3 justify-content-center flex-wrap">
                         <a href="/telecharger/majorite" class="btn btn-primary fw-bold px-4 shadow-sm">📥 Télécharger Majorité (>50%)</a>
@@ -302,7 +289,7 @@ def traiter_fichiers():
         df = donnees_globales['dataset']
 
     if df is None or df.empty:
-        return "❌ Veuillez d'abord importer des fichiers JSON valides.", 400
+        return "Veuillez d'abord importer des fichiers JSON valides.", 400
 
     # 2. Routage vers l'action demandée
     if action_demandee == "analyse":
@@ -325,7 +312,6 @@ def traiter_fichiers():
 
     elif action_demandee == "simuler":
         plt.close('all')
-        # ⚠️ IMPORTANT: Assure-toi que simuler_filtre retourne bien le dictionnaire !
         resultats_sim = simuler_filtre(df) 
         img_sim = fig_to_base64(plt.gcf())
         
@@ -376,8 +362,7 @@ def telecharger_fichier(type_fichier):
     return "Fichier introuvable. Veuillez relancer la simulation.", 404
 
 if __name__ == "__main__":
-    print("\n" + "="*60)
-    print("🌍 WEB APPLICATION INITIALISÉE AVEC SUCCÈS")
-    print("👉 VEUILLEZ OUVRIR LE LIEN SUIVANT : http://127.0.0.1:5000")
-    print("="*60 + "\n")
+    print(" WEB APPLICATION INITIALISÉE AVEC SUCCÈS")
+    print(" VEUILLEZ OUVRIR LE LIEN SUIVANT : http://127.0.0.1:5000")
+   
     app.run(debug=True, use_reloader=False, port=5000)
