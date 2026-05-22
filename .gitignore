@@ -1,0 +1,15 @@
+# Fichiers de cache Python
+__pycache__/
+*.pyc
+
+# Dossier des téléversements temporaires de l'application Flask
+temp_uploads/
+
+# Fichiers de données locaux (CSV générés et JSON de test)
+*.json
+*.csv
+
+# Environnement virtuel (si tu en as un)
+.venv/
+venv/
+env/

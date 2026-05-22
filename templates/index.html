@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI4Debunk · Validation Centre</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ─── Tokens ─────────────────────────────────────────────── */
+    :root {
+      --bg:        #0b0d10;
+      --surface:   #13161c;
+      --surface2:  #1c2029;
+      --border:    #2a2f3d;
+      --accent:    #3b82f6;
+      --accent2:   #6366f1;
+      --warn:      #f59e0b;
+      --success:   #22c55e;
+      --danger:    #ef4444;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --mono:      'DM Mono', monospace;
+      --sans:      'Syne', sans-serif;
+      --radius:    10px;
+      --shadow:    0 4px 24px rgba(0,0,0,.45);
+    }
+
+    /* ─── Reset ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── Noise texture overlay ──────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── Layout ─────────────────────────────────────────────── */
+    .page { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 0 28px 60px; }
+
+    /* ─── Header ─────────────────────────────────────────────── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 0 32px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-mark {
+      width: 38px; height: 38px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: grid; place-items: center;
+      font-size: 18px; font-weight: 800;
+      color: #fff; letter-spacing: -1px;
+      box-shadow: 0 0 18px rgba(99,102,241,.4);
+    }
+    .logo-text { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
+    .logo-text span { color: var(--muted); font-weight: 400; font-size: 13px; display: block; margin-top: 1px; }
+    .header-badge {
+      font-family: var(--mono); font-size: 11px; color: var(--muted);
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 5px 12px; border-radius: 20px;
+    }
+
+    /* ─── Upload card ────────────────────────────────────────── */
+    .upload-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 36px;
+      box-shadow: var(--shadow);
+      margin-bottom: 40px;
+    }
+    .upload-card h2 {
+      font-size: 18px; font-weight: 700; letter-spacing: -.3px;
+      margin-bottom: 6px;
+    }
+    .upload-card p { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+    .upload-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+    .file-input-wrap {
+      flex: 1; min-width: 240px;
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .file-input-wrap input[type=file] {
+      width: 100%; padding: 14px 16px;
+      background: transparent; color: var(--text);
+      font-family: var(--mono); font-size: 12px;
+      border: none; outline: none; cursor: pointer;
+    }
+    .file-input-wrap:focus-within { border-color: var(--accent); }
+    .btn-launch {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; cursor: pointer;
+      font-family: var(--sans); font-size: 14px; font-weight: 700;
+      padding: 14px 30px; border-radius: var(--radius);
+      letter-spacing: .3px; white-space: nowrap;
+      transition: opacity .2s, transform .15s;
+      box-shadow: 0 0 20px rgba(99,102,241,.35);
+    }
+    .btn-launch:hover { opacity: .85; transform: translateY(-1px); }
+    .btn-launch:active { transform: translateY(0); }
+
+    /* ─── Error banner ───────────────────────────────────────── */
+    .error-banner {
+      background: rgba(239,68,68,.1); border: 1px solid var(--danger);
+      color: var(--danger); border-radius: var(--radius);
+      padding: 14px 20px; font-family: var(--mono); font-size: 13px;
+      margin-bottom: 28px;
+    }
+
+    /* ─── Stats strip ────────────────────────────────────────── */
+    .stats-strip {
+      display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap;
+    }
+    .stat-chip {
+      flex: 1; min-width: 130px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 22px;
+    }
+    .stat-chip .val {
+      font-size: 28px; font-weight: 800; letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stat-chip .lbl { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* ─── Tab bar ────────────────────────────────────────────── */
+    .tab-bar {
+      display: flex; gap: 4px; margin-bottom: 24px;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 5px; border-radius: calc(var(--radius) + 2px);
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      flex: 1; min-width: 120px;
+      background: transparent; border: none; cursor: pointer;
+      color: var(--muted); font-family: var(--sans); font-size: 13px; font-weight: 600;
+      padding: 10px 16px; border-radius: var(--radius);
+      transition: background .2s, color .2s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text); background: var(--surface2); }
+    .tab-btn.active {
+      background: var(--surface2); color: var(--text);
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+      border: 1px solid var(--border);
+    }
+
+    /* ─── Panels ─────────────────────────────────────────────── */
+    .panel { display: none; }
+    .panel.active { display: block; animation: fadeUp .3s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── Card ───────────────────────────────────────────────── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 32px;
+      box-shadow: var(--shadow); margin-bottom: 20px;
+    }
+    .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+
+    /* ─── Tables ─────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); }
+    .datatable {
+      width: 100%; border-collapse: collapse;
+      font-family: var(--mono); font-size: 12px;
+    }
+    .datatable th {
+      background: var(--surface2); color: var(--accent);
+      padding: 11px 14px; text-align: left;
+      font-weight: 500; letter-spacing: .5px; text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .datatable td {
+      padding: 10px 14px; color: var(--text);
+      border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    .datatable tr:last-child td { border-bottom: none; }
+    .datatable tr:hover td { background: rgba(255,255,255,.025); }
+    .table-priorites th { color: var(--warn); }
+
+    /* ─── Two-column graph layout ────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+    @media (max-width: 780px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .graph-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; text-align: center;
+    }
+    .graph-card img { max-width: 100%; border-radius: 6px; }
+    .graph-card figcaption {
+      font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 10px;
+    }
+
+    /* ─── Info box ───────────────────────────────────────────── */
+    .info-box {
+      background: var(--surface2); border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 16px 20px; font-family: var(--mono); font-size: 12px;
+      color: var(--muted); line-height: 1.7;
+    }
+    .info-box strong { color: var(--text); font-weight: 500; }
+
+    .success-box {
+      background: rgba(34,197,94,.08); border-left: 3px solid var(--success);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 16px 20px; font-size: 13px; color: var(--text); line-height: 1.7;
+    }
+    .success-box code { font-family: var(--mono); color: var(--success); font-size: 12px; }
+
+    /* ─── Download button ────────────────────────────────────── */
+    .btn-dl {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(245,158,11,.12); border: 1px solid var(--warn);
+      color: var(--warn); text-decoration: none;
+      font-family: var(--sans); font-size: 13px; font-weight: 700;
+      padding: 10px 20px; border-radius: var(--radius);
+      transition: background .2s;
+    }
+    .btn-dl:hover { background: rgba(245,158,11,.22); }
+
+    /* ─── Empty state ────────────────────────────────────────── */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+    }
+    .empty-state .icon { font-size: 48px; }
+    .empty-state h4 { font-size: 18px; font-weight: 700; color: var(--success); margin: 16px 0 8px; }
+    .empty-state p { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+    /* ─── Loader overlay ─────────────────────────────────────── */
+    #loader {
+      display: none; position: fixed; inset: 0;
+      background: rgba(11,13,16,.88); backdrop-filter: blur(6px);
+      z-index: 999; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+    }
+    #loader.show { display: flex; }
+    .loader-ring {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      animation: spin .9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-label { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+
+    /* ─── Panel header row ───────────────────────────────────── */
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+    .panel-header h3 { margin: 0; }
+  </style>
+</head>
+<body>
+
+<!-- ── Loader overlay ─────────────────────────────────────── -->
+<div id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-label">Exécution du pipeline · veuillez patienter…</div>
+</div>
+
+<div class="page">
+
+  <!-- ── Header ──────────────────────────────────────────── -->
+  <header>
+    <div class="logo">
+      <div class="logo-mark">A4</div>
+      <div class="logo-text">
+        AI4Debunk
+        <span>Laboratoire ISIA · UMONS — Amadou</span>
+      </div>
+    </div>
+    <div class="header-badge">Validation Centre v1.0</div>
+  </header>
+
+  <!-- ── Upload card ─────────────────────────────────────── -->
+  <div class="upload-card">
+    <h2>📥 Chargement des Fichiers de Campagne</h2>
+    <p>// Sélectionnez simultanément les 5 fichiers JSON des annotateurs : Hugo · Eugene · Kwabena · Amadou · Guillaume</p>
+    <form action="/traiter" method="POST" enctype="multipart/form-data" id="pipeline-form">
+      <div class="upload-row">
+        <div class="file-input-wrap">
+          <input type="file" name="fichiers" multiple required accept=".json">
+        </div>
+        <button type="submit" class="btn-launch">▶ Lancer le Pipeline</button>
+      </div>
+    </form>
+  </div>
+
+  {% if error %}
+  <div class="error-banner">⚠ {{ error }}</div>
+  {% endif %}
+
+  {% if state %}
+  <!-- ── Stats strip ──────────────────────────────────────── -->
+  <div class="stats-strip">
+    <div class="stat-chip">
+      <div class="val">{{ state.nb_annotations }}</div>
+      <div class="lbl">// annotations totales</div>
+    </div>
+    <div class="stat-chip">
+      <div class="val">5</div>
+      <div class="lbl">// annotateurs actifs</div>
+    </div>
+    <div class="stat-chip">
+      <div class="val" id="nb-conflits">{% if state.a_conflits %}⚠{% else %}✓{% endif %}</div>
+      <div class="lbl">// statut conflits</div>
+    </div>
+  </div>
+
+  <!-- ── Tab bar ─────────────────────────────────────────── -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('raw', this)">🗂 Données brutes</button>
+    <button class="tab-btn"        onclick="switchTab('iaa', this)">📈 Accords IAA</button>
+    <button class="tab-btn"        onclick="switchTab('sim', this)">🧪 Simulation filtrage</button>
+    <button class="tab-btn"        onclick="switchTab('conf', this)">⚠ Gestion conflits</button>
+  </div>
+
+  <!-- ════ Panel : Données brutes ════ -->
+  <div class="panel active" id="panel-raw">
+    <div class="card">
+      <h3>Aperçu du Dataset Fusionné <span style="color:var(--muted);font-weight:400;font-size:13px;">— 15 premières lignes</span></h3>
+      <div class="table-wrap">{{ state.table_brute | safe }}</div>
+    </div>
+  </div>
+
+  <!-- ════ Panel : IAA ════ -->
+  <div class="panel" id="panel-iaa">
+    <div class="card">
+      <h3>Cohérence Globale · Thématiques & Kappa</h3>
+      <div class="grid-2">
+        <figure class="graph-card">
+          <img src="data:image/png;base64,{{ state.graph_iaa }}" alt="Graphique IAA">
+          <figcaption>// répartition des thématiques annotées</figcaption>
+        </figure>
+        <div class="info-box">
+          <strong>Matrices Kappa imprimées en terminal</strong><br><br>
+          Les scores de Cohen et Fleiss inter-annotateurs ont été calculés et affichés dans votre console Python pour vérification mathématique complète.<br><br>
+          <strong>Pourquoi terminal ?</strong><br>
+          Les matrices N×N sont volumineuses — le terminal garantit une lecture sans troncature.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ Panel : Simulation ════ -->
+  <div class="panel" id="panel-sim">
+    <div class="card">
+      <h3>Rapport des Scénarios Comparatifs</h3>
+      <div class="table-wrap" style="margin-bottom:24px;">
+        {{ state.table_rapport | safe }}
+      </div>
+      <div class="grid-2">
+        <figure class="graph-card">
+          <img src="data:image/png;base64,{{ state.graph_sim }}" alt="Graphique Simulation">
+          <figcaption>// comparaison des scénarios de filtrage</figcaption>
+        </figure>
+        <div class="success-box">
+          <strong>💾 Fichiers de production générés</strong><br><br>
+          <code>dataset_valide_majorite.csv</code><br>
+          <code>dataset_valide_unanimite.csv</code><br><br>
+          Sauvegardés dans votre dossier projet, sans colonnes de calcul superflues.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ Panel : Conflits ════ -->
+  <div class="panel" id="panel-conf">
+    <div class="card">
+      <div class="panel-header">
+        <h3>Éléments à Ré-annoter <span style="color:var(--muted);font-weight:400;font-size:13px;">— accord ≤ 50 %</span></h3>
+        {% if state.a_conflits %}
+        <a href="/telecharger_conflits" class="btn-dl">💾 Télécharger la feuille de route CSV</a>
+        {% endif %}
+      </div>
+      {% if state.a_conflits %}
+      <div class="table-wrap">{{ state.table_priorites | safe }}</div>
+      {% else %}
+      <div class="empty-state">
+        <div class="icon">🎉</div>
+        <h4>Aucun conflit détecté</h4>
+        <p>// Votre équipe est unanime ou dispose d'une majorité nette sur l'ensemble de la campagne.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% endif %}
+</div><!-- /page -->
+
+<script>
+  // ── Tab switching ──────────────────────────────────────────
+  function switchTab(id, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── Loader on form submit ──────────────────────────────────
+  document.getElementById('pipeline-form').addEventListener('submit', () => {
+    document.getElementById('loader').classList.add('show');
+  });
+</script>
+</body>
+</html>
